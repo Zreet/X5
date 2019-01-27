@@ -506,8 +506,8 @@
         </ScreenPos>
       </Note>
       <Note Bar="37" BeatPos="48" Track="0" Type="0">
-        <ScreenPos x="250" y="-300">
-          <FlyTrack name="波浪形" degree="83.64384" />
+        <ScreenPos x="250" y="200">
+          <FlyTrack name="波浪形" degree="261.2783" />
         </ScreenPos>
       </Note>
       <Note Bar="38" BeatPos="0" Track="0" Type="0">
@@ -561,8 +561,8 @@
         </ScreenPos>
       </Note>
       <Note Bar="39" BeatPos="48" Track="0" Type="0">
-        <ScreenPos x="-250" y="-300">
-          <FlyTrack name="波浪形" degree="81.98372" />
+        <ScreenPos x="-250" y="200">
+          <FlyTrack name="波浪形" degree="262.2125" />
         </ScreenPos>
       </Note>
       <Note Bar="40" BeatPos="0" Track="0" Type="0">

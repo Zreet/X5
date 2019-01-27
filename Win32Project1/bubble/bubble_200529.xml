@@ -151,7 +151,7 @@
       <Note Bar="11" BeatPos="32" Track="3" Type="2" EndBar="11" EndPos="56" ID="4">
         <MoveTrack name="滑动圆弧对称" degree="-57.11623" />
         <FlyTrack name="波浪形" degree="262.9698" />
-        <ScreenPos x="-600" y="100" />
+        <ScreenPos x="-700" y="100" />
       </Note>
       <Note Bar="12" BeatPos="0" Track="4" Type="0">
         <ScreenPos x="247" y="-289">
@@ -704,28 +704,23 @@
         <ScreenPos x="-300" y="-250" />
       </Note>
       <Note Bar="56" BeatPos="48" Track="0" Type="0">
-        <ScreenPos x="600" y="50">
-          <FlyTrack name="波浪形" degree="352.0746" />
+        <ScreenPos x="600" y="200">
+          <FlyTrack name="波浪形" degree="262.4888" />
         </ScreenPos>
       </Note>
       <Note Bar="57" BeatPos="0" Track="0" Type="0">
-        <ScreenPos x="199" y="50">
+        <ScreenPos x="200" y="200">
           <FlyTrack name="波浪形" degree="172.4473" />
         </ScreenPos>
       </Note>
-      <Note Bar="57" BeatPos="8" Track="0" Type="0">
-        <ScreenPos x="249" y="-150">
-          <FlyTrack name="波浪形" degree="143.806" />
-        </ScreenPos>
-      </Note>
       <Note Bar="57" BeatPos="16" Track="0" Type="0">
-        <ScreenPos x="399" y="-300">
-          <FlyTrack name="波浪形" degree="115.9592" />
+        <ScreenPos x="200" y="-200">
+          <FlyTrack name="波浪形" degree="85.12843" />
         </ScreenPos>
       </Note>
       <Note Bar="57" BeatPos="32" Track="0" Type="2" EndBar="57" EndPos="48" ID="36">
         <MoveTrack name="滑动弧对称" degree="205.5843" />
-        <FlyTrack name="波浪形" degree="173.2689" />
+        <FlyTrack name="波浪形" degree="208.4775" />
         <ScreenPos x="-250" y="50" />
       </Note>
       <Note Bar="58" BeatPos="0" Track="0" Type="0">
@@ -938,7 +933,7 @@
           <FlyTrack name="波浪形" degree="187.4613" />
         </ScreenPos>
       </Note>
-      <Note Bar="70" BeatPos="56" Track="2" Type="0">
+      <Note Bar="70" BeatPos="56" Track="0" Type="0">
         <ScreenPos x="-600" y="0">
           <FlyTrack name="波浪形" degree="174.2881" />
         </ScreenPos>

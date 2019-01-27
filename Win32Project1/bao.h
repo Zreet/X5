@@ -38,7 +38,8 @@ public:
 	int len;
 	int timepoint;
 	int inCombine;
-	OneTap(int type, int timepoint, int inCombine = 0, double len = 1) :type(type), timepoint(timepoint), len(len), inCombine(inCombine) { calscore();  };
+	int cannotDivide;
+	OneTap(int type, int timepoint, int inCombine = 0, int len = 1, int cannotDivide = 0) :type(type), timepoint(timepoint), len(len), inCombine(inCombine), cannotDivide(cannotDivide) { calscore();  };
 	void Print()
 	{
 		string info = to_string(type) + '\t' + to_string(timepoint) + "\r\n";
@@ -772,9 +773,13 @@ tuple<int, string, string> PinballBytesParser(string filename, TapLink &Taplink)
 			UINT EndPos = *p;
 			UINT EndTimePoint = EndBar * 64 + EndPos;
 			int len = (EndTimePoint - TimePoint) / 4 + 1;
+			int rrest = 0;
 			if ((EndTimePoint - TimePoint) % 4 != 0)
+			{
+				rrest = (EndTimePoint - TimePoint) % 4;
 				len++;
-			Taplink.push_back(OneTap(Type, TimePoint, 0, len));
+			}			
+			Taplink.push_back(OneTap(Type, TimePoint, 0, len, rrest));
 		}
 		i += 17;
 	}	
@@ -1034,19 +1039,27 @@ tuple<int, string, string> IdolBytesParser(string filename, TapLink &Taplink)
 					}
 				}
 			}
+			int rrest = 0;
 			if (!inCombine)
 			{
 				len = (EndTimePoint - TimePoint) / 4 + 1;
 				if ((EndTimePoint - TimePoint) % 4 != 0)
+				{
+					rrest = (EndTimePoint - TimePoint) % 4;
 					len++;
+				}
+					
 			}
 			else
 			{
 				len = (EndTimePoint - TimePoint) / 4;
 				if ((EndTimePoint - TimePoint) % 4 != 0)
+				{
+					rrest = (EndTimePoint - TimePoint) % 4;
 					len++;
+				}			
 			}
-			Taplink.push_back(OneTap(Type, TimePoint, inCombine, len));
+			Taplink.push_back(OneTap(Type, TimePoint, inCombine, len, rrest));
 			//if (filename.find("100168.xml") != -1)
 				//cout << ID << '\t' << startBar << '\t' << startPos << '\t' << inCombine << '\t' << "long\t" << endBar << '\t' << endPos << endl;
 		}
@@ -1103,6 +1116,8 @@ Solution maxBao(TapLink &Taplink, double BPM, vector<SComboWithScore> &SingleSor
 		{
 				sum = Taplink[j].timepoint - base;
 		}
+		if (j == Taplink.size() && Taplink[j - 1].timepoint - base <= threshold)
+			j++;
 		j--;
 		for (int k = i; k < j; k++)
 			tmp += Taplink[k].score;
@@ -1176,6 +1191,9 @@ Solution checkCunBao(TapLink &Taplink, int threshold, int showtime, vector<MComb
 			int k;
 			for (k = j; k < Taplink.size() && timelong <= rest; k++)
 				timelong = Taplink[k].timepoint - base;
+			if (k == Taplink.size() && Taplink[k - 1].timepoint - base <= threshold)
+				k++;
+			k--;
 			for (int l = j; l < k; l++)
 				tmp += Taplink[l].score;
 			if (tmp > submax)
@@ -1235,6 +1253,8 @@ Solution ShuangBao(TapLink &Taplink, double BPM, vector<MComboWithScore> &MultiS
 		base = Taplink[i].timepoint;
 		for (j = i; sum <= threshold && j<Taplink.size(); j++)
 			sum = Taplink[j].timepoint - base;
+		if (j == Taplink.size() && Taplink[j - 1].timepoint - base <= threshold)
+			j++;
 		j--;
 		for (int k = i; k < j; k++)
 			tmp += Taplink[k].score;
@@ -1246,6 +1266,8 @@ Solution ShuangBao(TapLink &Taplink, double BPM, vector<MComboWithScore> &MultiS
 			bbase = Taplink[l].timepoint;
 			for(o=l; ssum <= threshold && o<Taplink.size(); o++)
 				ssum = Taplink[o].timepoint - bbase;
+			if (o == Taplink.size() && Taplink[o - 1].timepoint - bbase <= threshold)
+				o++;
 			o--;
 			for (int k = l; k < o; k++)
 				ttmp += Taplink[k].score;
@@ -1331,7 +1353,7 @@ void correctCombo(TapLink &Taplink)
 			weight = 1.15;
 		else
 			weight = 1.2;
-		Taplink[i].score = Taplink[i].score * weight;
+		Taplink[i].score = int(Taplink[i].score * weight);
 	}
 }
 string PrintType(OneTap *p)
@@ -1365,7 +1387,7 @@ void outPutTap(OneTap *p, ofstream &out)
 	string type = PrintType(p);
 	out << type << endl;
 }
-TapLink convertLong(TapLink Taplink)
+TapLink convertLong(TapLink &Taplink)
 {
 	TapLink newLink;
 	int restLen;
@@ -1377,19 +1399,46 @@ TapLink convertLong(TapLink Taplink)
 		case LONG:
 			if (Taplink[i].inCombine)
 			{
-				for (int j = 1; j <= int(Taplink[i].len); j++)
-					newLink.push_back(OneTap(Taplink[i].type, Taplink[i].timepoint + 4 * j, Taplink[i].inCombine));
+				if (!Taplink[i].cannotDivide)
+				{
+					for (int j = 1; j <= int(Taplink[i].len); j++)
+						newLink.push_back(OneTap(Taplink[i].type, Taplink[i].timepoint + 4 * j, Taplink[i].inCombine));
+				}
+				else
+				{
+					for (int j = 1; j < int(Taplink[i].len); j++)
+						newLink.push_back(OneTap(Taplink[i].type, Taplink[i].timepoint + 4 * j, Taplink[i].inCombine));
+					newLink.push_back(OneTap(Taplink[i].type, Taplink[i].timepoint + 4 * (Taplink[i].len - 1) + Taplink[i].cannotDivide, Taplink[i].inCombine));
+				}
 			}
 			else
 			{
-				for (int j = 0; j < int(Taplink[i].len); j++)
-					newLink.push_back(OneTap(Taplink[i].type, Taplink[i].timepoint + 4 * j, Taplink[i].inCombine));
+				if (!Taplink[i].cannotDivide) 
+				{
+					for (int j = 0; j < int(Taplink[i].len); j++)
+						newLink.push_back(OneTap(Taplink[i].type, Taplink[i].timepoint + 4 * j, Taplink[i].inCombine));
+				}
+				else
+				{
+					for (int j = 0; j < int(Taplink[i].len) - 1; j++)
+						newLink.push_back(OneTap(Taplink[i].type, Taplink[i].timepoint + 4 * j, Taplink[i].inCombine));
+					newLink.push_back(OneTap(Taplink[i].type, Taplink[i].timepoint + 4 * (Taplink[i].len - 2) + Taplink[i].cannotDivide, Taplink[i].inCombine));
+				}
 			}
 			break;
 		case PinballLong:
 		{
-			for (int j = 0; j < int(Taplink[i].len); j++)
-				newLink.push_back(OneTap(Taplink[i].type, Taplink[i].timepoint + 4 * j, Taplink[i].inCombine));
+			if (!Taplink[i].cannotDivide)
+			{
+				for (int j = 0; j < int(Taplink[i].len); j++)
+					newLink.push_back(OneTap(Taplink[i].type, Taplink[i].timepoint + 4 * j, Taplink[i].inCombine));
+			}
+			else
+			{
+				for (int j = 0; j < int(Taplink[i].len) - 1; j++)
+					newLink.push_back(OneTap(Taplink[i].type, Taplink[i].timepoint + 4 * j, Taplink[i].inCombine));
+				newLink.push_back(OneTap(Taplink[i].type, Taplink[i].timepoint + 4 * (Taplink[i].len - 2) + Taplink[i].cannotDivide, Taplink[i].inCombine));
+			}
 			break;
 		}
 		case BubbleLong:
@@ -1424,12 +1473,12 @@ pair<int, __int64> compareSkill(TapLink &Taplink, int start, int end)
 	{
 		if (i >= start && i < end)
 		{
-			limit += double(Taplink[i].score) * 1.11 * 1.5;
-			fire += double(Taplink[i].score) * 2.7;
+			limit += int(Taplink[i].score * 1.11 * 1.5);
+			fire += int(Taplink[i].score * 2.7);
 		}
 		else
 		{
-			limit += double(Taplink[i].score) * 1.11;
+			limit += int(Taplink[i].score * 1.11);
 			fire += Taplink[i].score;
 		}
 	}

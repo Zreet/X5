@@ -651,28 +651,28 @@
     </Normal>
   </NoteInfo>
   <ActionSeq type="1">
-    <ActionList start_bar="5" dance_len="1" seq_len="4" level="2" type="" />
-    <ActionList start_bar="9" dance_len="2" seq_len="4" level="2" type="" />
-    <ActionList start_bar="13" dance_len="1" seq_len="1" level="2" type="" />
-    <ActionList start_bar="14" dance_len="2" seq_len="8" level="2" type="" />
-    <ActionList start_bar="22" dance_len="2" seq_len="8" level="2" type="" />
-    <ActionList start_bar="30" dance_len="1" seq_len="1" level="2" type="" />
-    <ActionList start_bar="31" dance_len="2" seq_len="4" level="2" type="" />
-    <ActionList start_bar="35" dance_len="2" seq_len="4" level="2" type="" />
-    <ActionList start_bar="39" dance_len="1" seq_len="1" level="2" type="" />
-    <ActionList start_bar="40" dance_len="2" seq_len="8" level="2" type="" />
-    <ActionList start_bar="48" dance_len="4" seq_len="4" level="2" type="" />
-    <ActionList start_bar="52" dance_len="1" seq_len="4" level="2" type="" />
-    <ActionList start_bar="56" dance_len="2" seq_len="4" level="2" type="" />
-    <ActionList start_bar="60" dance_len="2" seq_len="4" level="2" type="" />
-    <ActionList start_bar="64" dance_len="2" seq_len="4" level="2" type="" />
-    <ActionList start_bar="68" dance_len="2" seq_len="2" level="2" type="" />
-    <ActionList start_bar="70" dance_len="1" seq_len="1" level="2" type="" />
-    <ActionList start_bar="71" dance_len="2" seq_len="8" level="2" type="" />
-    <ActionList start_bar="79" dance_len="2" seq_len="8" level="2" type="" />
-    <ActionList start_bar="87" dance_len="2" seq_len="4" level="2" type="" />
-    <ActionList start_bar="91" dance_len="2" seq_len="2" level="2" type="" />
-    <ActionList start_bar="93" dance_len="4" seq_len="4" level="2" type="" />
+    <ActionList start_bar="5" dance_len="0" seq_len="0" level="0" type="" />
+    <ActionList start_bar="1598902338" dance_len="1735287154" seq_len="1752395639" level="1635348065" type="" />
+    <ActionList start_bar="2304" dance_len="0" seq_len="0" level="0" type="" />
+    <ActionList start_bar="1297105460" dance_len="1851880031" seq_len="1936684903" level="2037277032" type="" />
+    <ActionList start_bar="851968" dance_len="0" seq_len="0" level="0" type="" />
+    <ActionList start_bar="1346516019" dance_len="1634885453" seq_len="1870096238" level="1851877491" type="" />
+    <ActionList start_bar="234881024" dance_len="0" seq_len="0" level="0" type="" />
+    <ActionList start_bar="1110717233" dance_len="1918848336" seq_len="2003267169" level="1634235247" type="" />
+    <ActionList start_bar="0" dance_len="22" seq_len="0" level="0" type="" />
+    <ActionList start_bar="875770207" dance_len="1598902338" seq_len="1735287154" level="1752395639" type="" />
+    <ActionList start_bar="0" dance_len="7680" seq_len="0" level="0" type="" />
+    <ActionList start_bar="858873668" dance_len="1297105460" seq_len="1851880031" level="1936684903" type="" />
+    <ActionList start_bar="0" dance_len="2031616" seq_len="0" level="0" type="" />
+    <ActionList start_bar="828326995" dance_len="1346516019" seq_len="1634885453" level="1870096238" type="" />
+    <ActionList start_bar="50" dance_len="587202560" seq_len="0" level="0" type="" />
+    <ActionList start_bar="1598313216" dance_len="1110717233" seq_len="1918848336" level="2003267169" type="" />
+    <ActionList start_bar="12895" dance_len="0" seq_len="39" level="0" type="" />
+    <ActionList start_bar="1146290176" dance_len="875770207" seq_len="1598902338" level="1735287154" type="" />
+    <ActionList start_bar="3235633" dance_len="0" seq_len="10240" level="0" type="" />
+    <ActionList start_bar="1392508928" dance_len="858873668" seq_len="1297105460" level="1851880031" type="" />
+    <ActionList start_bar="845101104" dance_len="0" seq_len="3145728" level="0" type="" />
+    <ActionList start_bar="32" dance_len="828326995" seq_len="1346516019" level="1634885453" type="" />
   </ActionSeq>
   <CameraSeq>
     <Camera name="SC" bar="5" pos="0" end_bar="92" end_pos="0" />
