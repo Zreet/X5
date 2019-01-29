@@ -77,6 +77,7 @@ class SComboWithScore : public ComboWithScore
 {
 public:
 	int combo;
+	int i;
 	SComboWithScore(int combo, double score) : ComboWithScore(score), combo(combo){}
 };
 class MComboWithScore : public ComboWithScore
@@ -84,6 +85,8 @@ class MComboWithScore : public ComboWithScore
 public:
 	int combo1;
 	int combo2;
+	int i1;
+	int i2;
 	MComboWithScore(int combo1, int combo2, double score) :ComboWithScore(score), combo1(combo1), combo2(combo2){}
 };
 bool MComboWithScoreScomp(const MComboWithScore &a, const MComboWithScore &b)
@@ -112,6 +115,8 @@ public:
 	int cunmax;
 	int cun1, cun2;
 	int flag;
+	int fullcombo;
+	int halfcombo;
 	OneTap *max1;
 	OneTap *max2;
 	Solution(double imax, double remax, int inCombine0=0, int inCombine1=0, double incase0=NULL, double incase1=NULL) : imax(imax), remax(remax), 
@@ -1121,7 +1126,9 @@ Solution maxBao(TapLink &Taplink, double BPM, vector<SComboWithScore> &SingleSor
 		j--;
 		for (int k = i; k < j; k++)
 			tmp += Taplink[k].score;
-		SingleSort.push_back(SComboWithScore(getCombo(Taplink, i),tmp));
+		SComboWithScore ss(getCombo(Taplink, i), tmp);
+		ss.i = i;
+		SingleSort.push_back(move(ss));
 		if (tmp > remax)
 		{
 			if (tmp > max)
@@ -1203,7 +1210,10 @@ Solution checkCunBao(TapLink &Taplink, int threshold, int showtime, vector<MComb
 				subsubmark = k;
 			}
 		}
-		MultiSort.push_back(MComboWithScore(getCombo(Taplink, i), getCombo(Taplink, submark), sum + submax));
+		MComboWithScore ss(getCombo(Taplink, i), getCombo(Taplink, submark), sum + submax);
+		ss.i1 = i;
+		ss.i2 = submark;
+		MultiSort.push_back(move(ss));
 		if (sum + submax > max)
 		{
 			max1 = sum;
@@ -1229,6 +1239,8 @@ Solution checkCunBao(TapLink &Taplink, int threshold, int showtime, vector<MComb
 	tmp.mark2 = mark2;
 	tmp.mark4 = mark4;
 	tmp.mark3 = mark3;
+	tmp.fullcombo = getCombo(Taplink, Taplink.size());
+	tmp.halfcombo = getCombo(Taplink, last);
 	return tmp;
 }
 
@@ -1278,7 +1290,10 @@ Solution ShuangBao(TapLink &Taplink, double BPM, vector<MComboWithScore> &MultiS
 			    submark4 = o;
 			}
 		}
-		MultiSort.push_back(MComboWithScore(getCombo(Taplink, i), getCombo(Taplink, submark), submax + tmp));
+		MComboWithScore ss(getCombo(Taplink, i), getCombo(Taplink, submark), submax + tmp);
+		ss.i1 = i;
+		ss.i2 = submark;
+		MultiSort.push_back(move(ss));
 		if (submax + tmp > max)
 		{
 			max = submax + tmp;
@@ -1366,26 +1381,28 @@ string PrintType(OneTap *p)
 	if (p->type == SLIP)
 		rst = "SLIP";
 	if (p->type == PinballLong)
-		rst = "PinballLong";
+		rst = "LONG";
 	if (p->type == PinballSeries)
-		rst = "PinballSeries";
+		rst = "SERIES";
 	if (p->type == PinballSingle)
-		rst = "PinballSingle";
-	if (p->type == PinballSlip)
-		rst = "PinballSlip";
+		rst = "SINGLE";
+	if (p->type == PinballSlip && p->score < 5000)
+		rst = "SLIP";
+	if (p->type == PinballSlip && p->score > 5000)
+		rst = "*2";
 	if (p->type == BubbleLong)
-		rst = "BubbleLong";
+		rst = "LONG";
 	if (p->type == BubbleSingle)
-		rst = "BubbleSingle";
+		rst = "SINGLE";
 	if (p->type == BubbleSlip)
-		rst = "BubbleSlip";
+		rst = "SLIP";
 	return rst;
 }
 void outPutTap(OneTap *p, ofstream &out)
 {
-	out << p->timepoint / 64 << ',' << p->timepoint % 64 << ',';
+	out << ',' <<p->timepoint / 64 << ',' << p->timepoint % 64 << ',';
 	string type = PrintType(p);
-	out << type << endl;
+	out << type << ',';
 }
 TapLink convertLong(TapLink &Taplink)
 {
@@ -2039,6 +2056,10 @@ int FindIIndex(vector<pair<int, int>> &buin, TapLink &SB, int bar, int pos)
 			break;
 		}
 	}
+	if (ttime == 0)
+	{
+		ttime = buin.back().first * 64 + buin.back().second;
+	}
 	int target = bar * 64 + pos;
 	int pre = 0;
 	int cnt = 0;
@@ -2124,35 +2145,59 @@ void MultiThreadProcess(Context ctx)
 		if (b.maxscore1 + b.maxscore2 < c.maxscore1 + c.maxscore2 && c.maxscore1 / 2600 > 5.0)
 			cunFlag = 1;
 		pair<int, int> shuangSkill = ShuangcompareSkill(newSB, b.mark1, b.mark2, b.mark3, b.mark4);
-		int bi1 = 0, bi2 = 0, bi3 = 0;
+		vector<int> iforsolo(5);
+		vector<int> iforduel(10);
 		if (type == bubble)
 		{
-			bi1 = FindIIndex(buin, SB, newSB[a.mark1].timepoint / 64, newSB[a.mark1].timepoint % 64);
-			if (!cunFlag)
+			for (int o = 0; o < 5; o++)
 			{
-				bi2 = FindIIndex(buin, SB, newSB[b.mark1].timepoint / 64, newSB[b.mark1].timepoint % 64);
-				bi3 = FindIIndex(buin, SB, newSB[b.mark3].timepoint / 64, newSB[b.mark3].timepoint % 64);
-			}
-			else
-			{
-				bi2 = FindIIndex(buin, SB, newSB[c.mark1].timepoint / 64, newSB[c.mark1].timepoint % 64);
-				bi3 = FindIIndex(buin, SB, newSB[c.mark3].timepoint / 64, newSB[c.mark3].timepoint % 64);
+				iforsolo[o] = FindIIndex(buin, SB, newSB[SingleSort[o].i].timepoint / 64, newSB[SingleSort[o].i].timepoint % 64);
+				iforduel[o*2] = FindIIndex(buin, SB, newSB[MultiSort[o].i1].timepoint / 64, newSB[MultiSort[o].i1].timepoint % 64);
+				iforduel[o * 2 + 1] = FindIIndex(buin, SB, newSB[MultiSort[o].i2].timepoint / 64, newSB[MultiSort[o].i2].timepoint % 64);
 			}
 		}
 		
 		out_mutex.lock();
 		out << get<1>(ret) << ',' << get<2>(ret) << ',';
-		out << filenamelist[i] << ',';
-		if(!cunFlag)
-			out << a.imax << /*',' << a.remax*/ ',' << b.imax << ',' << b.remax << endl;
+		out << filenamelist[i] << ',' << c.halfcombo  << ',' << c.fullcombo << endl;
+		if (skill.first == 0)
+			out << "fire" << ',' << skill.second << endl;
 		else
-			out << a.imax << /*',' << a.remax*/ ',' << c.imax << ',' << c.remax << endl;
-		if(type == bubble)
-			out << "bubble index:" << ',' << bi1 << ',' << bi2 << ',' << bi3 << endl;
+			out << "limit" << ',' << skill.second << endl;
+		for (int o = 0; o < 5; o++)
+		{
+			out << SingleSort[o].combo;
+			outPutTap(&newSB[SingleSort[o].i], out);
+			out << SingleSort[o].score / 2600;
+			if (type == bubble)
+				out << ',' << iforsolo[o];
+			out << endl;
+		}
+		if (shuangSkill.first == 0)
+			out << "fire" << ',' << shuangSkill.second << endl;
+		else
+			out << "limit" << ',' << shuangSkill.second << endl;
+		for (int o = 0; o < 5; o++)
+		{
+			out << MultiSort[o].combo1 << ',' << MultiSort[o].combo2;
+			outPutTap(&newSB[MultiSort[o].i1], out);
+			outPutTap(&newSB[MultiSort[o].i2], out);
+			out << MultiSort[o].score / 2600;
+			if (type == bubble)
+				out << ',' << iforduel[o*2] << ',' << iforduel[o*2+1];
+			out << endl;
+		}
+		out << endl;
+		//if(!cunFlag)
+			//out << a.imax << /*',' << a.remax*/ ',' << b.imax << ',' << b.remax << endl;
+		//else
+			//out << a.imax << /*',' << a.remax*/ ',' << c.imax << ',' << c.remax << endl;
+		//if(type == bubble)
+			//out << "bubble index:" << ',' << bi1 << ',' << bi2 << ',' << bi3 << endl;
 		//out << "Debug" << ',' << newSB[a.mark1].timepoint / 64 << ':' << newSB[a.mark1].timepoint % 64 << ',' << newSB[a.mark2].timepoint / 64 << ':' << newSB[a.mark2].timepoint % 64 << endl;
 		
-		outPutTap(a.max1, out);
-		if (!cunFlag)
+		//outPutTap(a.max1, out);
+		/*if (!cunFlag)
 		{
 			outPutTap(b.max1, out);
 			outPutTap(b.max2, out);
@@ -2189,7 +2234,7 @@ void MultiThreadProcess(Context ctx)
 		out << "dual rank" << endl;
 		for (int o = 0; o < 5; o++)
 			out << MultiSort[o].combo1 << ',' << MultiSort[o].combo2 << ',' << MultiSort[o].score / 2600 << endl;
-		out << endl;
+		out << endl;*/
 		out_mutex.unlock();
 		SB.clear();
 		MultiSort.clear();

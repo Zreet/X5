@@ -22,17 +22,35 @@ ATOM                MyRegisterClass(HINSTANCE hInstance);
 BOOL                InitInstance(HINSTANCE, int);
 LRESULT CALLBACK    WndProc(HWND, UINT, WPARAM, LPARAM);
 INT_PTR CALLBACK    About(HWND, UINT, WPARAM, LPARAM);
+void ReadNote(ofstream &out, int type)
+{
+	out << "name" << ',' << "artist" << ',' << "file name" << ',' << "half combo" << ',' << "full combo" << endl;
+	out << "solo skill" << ',' << "solo max score" << endl;
+	out << "5 solo point rank" << endl;
+	out << "combo" << ',' << "bar" << ',' << "pos" << ',' << "type" << ',' << "score";
+	if (type)
+		out << ',' << "Bubble index";
+	out << endl;
+	out << "5 dual point rank" << endl;
+	out << "combo" << ',' << "combo" << ',' <<  "bar" << ',' << "pos" << ',' << "type" << ',' << "bar" << ',' << "pos" << ',' << "type" << ',' <<  "score";
+	if (type)
+		out << ',' << "Bubble index" << ',' << "Bubble index";
+	out << endl << endl;
+}
 DWORD WINAPI workerProcess(LPVOID lpParameter)
 {
 	char buf[0x7FFF] = { 0 };
 	ofstream idols, pinballs, bubbles;
 	idols.open("idol_mod.csv");
+	ReadNote(idols, 0);
 	getAll("idol", idols);
 	idols.close();
 	pinballs.open("pinball_mod.csv");
+	ReadNote(pinballs, 0);
 	getAll("pinball", pinballs);
 	pinballs.close();
 	bubbles.open("bubble_mod.csv");
+	ReadNote(bubbles, 1);
 	getAll("bubble", bubbles);
 	bubbles.close();
 	GetWindowText(het1, buf, 0x7FFF);
@@ -45,6 +63,7 @@ DWORD WINAPI idolProcess(LPVOID lpParameter)
 	char buf[0x7FFF] = { 0 };
 	ofstream out;
 	out.open("idol_mod.csv");
+	ReadNote(out, 0);
 	getAll("idol", out);
 	out.close();
 	EnterCriticalSection(&CS);
@@ -59,6 +78,7 @@ DWORD WINAPI pinballProcess(LPVOID lpParameter)
 	ofstream out;
 	char buf[0x7FFF] = { 0 };
 	out.open("pinball_mod.csv");
+	ReadNote(out, 0);
 	getAll("pinball", out);
 	out.close();
 	EnterCriticalSection(&CS);
@@ -73,6 +93,7 @@ DWORD WINAPI bubbleProcess(LPVOID lpParameter)
 	ofstream out;
 	char buf[0x7FFF] = { 0 };
 	out.open("bubble_mod.csv");
+	ReadNote(out, 1);
 	getAll("bubble", out);
 	out.close();
 	EnterCriticalSection(&CS);
