@@ -1400,9 +1400,8 @@ string PrintType(OneTap *p)
 }
 void outPutTap(OneTap *p, ofstream &out)
 {
-	out << ',' <<p->timepoint / 64 << ',' << p->timepoint % 64 << ',';
-	string type = PrintType(p);
-	out << type << ',';
+	out << p->timepoint / 64 << ',' << p->timepoint % 64 ;
+	
 }
 TapLink convertLong(TapLink &Taplink)
 {
@@ -2166,11 +2165,13 @@ void MultiThreadProcess(Context ctx)
 			out << "limit" << ',' << skill.second << endl;
 		for (int o = 0; o < 5; o++)
 		{
-			out << SingleSort[o].combo;
-			outPutTap(&newSB[SingleSort[o].i], out);
-			out << SingleSort[o].score / 2600;
+			out << SingleSort[o].combo << ',';
+			out << SingleSort[o].score / 2600 << ',';
 			if (type == bubble)
-				out << ',' << iforsolo[o];
+				out << iforsolo[o] << ',';
+			string SS = PrintType(&newSB[SingleSort[o].i]);
+			out << SS << ',';
+			outPutTap(&newSB[SingleSort[o].i], out);
 			out << endl;
 		}
 		if (shuangSkill.first == 0)
@@ -2179,12 +2180,17 @@ void MultiThreadProcess(Context ctx)
 			out << "limit" << ',' << shuangSkill.second << endl;
 		for (int o = 0; o < 5; o++)
 		{
-			out << MultiSort[o].combo1 << ',' << MultiSort[o].combo2;
-			outPutTap(&newSB[MultiSort[o].i1], out);
-			outPutTap(&newSB[MultiSort[o].i2], out);
-			out << MultiSort[o].score / 2600;
+			out << MultiSort[o].combo1 << ',' << MultiSort[o].combo2 << ',';
+			out << MultiSort[o].score / 2600 << ',';
 			if (type == bubble)
-				out << ',' << iforduel[o*2] << ',' << iforduel[o*2+1];
+				out  << iforduel[o * 2] << ',' << iforduel[o * 2 + 1] << ',';
+			string SS = PrintType(&newSB[MultiSort[o].i1]);
+			out << SS << ',';
+			SS = PrintType(&newSB[MultiSort[o].i2]);
+			out << SS << ',';
+			outPutTap(&newSB[MultiSort[o].i1], out);
+			out << ',';
+			outPutTap(&newSB[MultiSort[o].i2], out);			
 			out << endl;
 		}
 		out << endl;

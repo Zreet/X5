@@ -27,14 +27,16 @@ void ReadNote(ofstream &out, int type)
 	out << "name" << ',' << "artist" << ',' << "file name" << ',' << "half combo" << ',' << "full combo" << endl;
 	out << "solo skill" << ',' << "solo max score" << endl;
 	out << "5 solo point rank" << endl;
-	out << "combo" << ',' << "bar" << ',' << "pos" << ',' << "type" << ',' << "score";
+	out << "combo" << ',' << "score" ;
 	if (type)
 		out << ',' << "Bubble index";
+	out << ',' << "type" << ',' << "bar" << ',' << "pos";
 	out << endl;
 	out << "5 dual point rank" << endl;
-	out << "combo" << ',' << "combo" << ',' <<  "bar" << ',' << "pos" << ',' << "type" << ',' << "bar" << ',' << "pos" << ',' << "type" << ',' <<  "score";
+	out << "combo" << ',' << "combo" << ',' << "score";
 	if (type)
 		out << ',' << "Bubble index" << ',' << "Bubble index";
+	out << ',' << "type" << ',' << "type" << ',' << "bar" << ',' << "pos" << ',' << "bar" << ',' << "pos";
 	out << endl << endl;
 }
 DWORD WINAPI workerProcess(LPVOID lpParameter)

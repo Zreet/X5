@@ -68,6 +68,7 @@ class XML
 {
 public:
 	string xml;
+	double pps;
 	XML()
 	{
 		xml = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<Level>\n";
@@ -76,6 +77,7 @@ public:
 	{
 		xml += "  <LevelInfo>\n";
 		AddItemL("BPM", in[0]);
+		pps = (in[0]/60)*16;
 		AddItemL("BeatPerBar", in[1]);
 		AddItemL("BeatLen", in[2]);
 		AddItemL("EnterTimeAdjust", in[3]);
@@ -167,8 +169,6 @@ public:
 				xml += "      <Note ID=\"" + to_string(p.ID) + "\" note_type=\"" + p.type + "\" Bar=\"" + to_string(p.Bar) + "\" Pos=\"" + to_string(p.Pos) + "\" EndBar=\"" + to_string(p.endBar) + "\" EndPos=\"" + to_string(p.endPos) + "\" Son=\"\" EndArea=\"" + to_string(p.EndArea1);
 				if (p.EndArea2)
 					xml += '|' + to_string(p.EndArea2);
-				xml+= "\" MoveTime=\"3\" />\n";
-
 			}
 			else
 			{
@@ -177,16 +177,17 @@ public:
 					xml += "      <Note ID=\"" + to_string(p.ID) + "\" note_type=\"" + p.type + "\" Bar=\"" + to_string(p.Bar) + "\" Pos=\"" + to_string(p.Pos) + "\" Son=\"" + to_string(p.son) + "\" EndArea=\"" + to_string(p.EndArea1);
 					if (p.EndArea2)
 						xml += '|' + to_string(p.EndArea2);
-					xml += "\" MoveTime=\"3\" />\n";
 				}
 				else
 				{
 					xml += "      <Note ID=\"" + to_string(p.ID) + "\" note_type=\"" + p.type + "\" Bar=\"" + to_string(p.Bar) + "\" Pos=\"" + to_string(p.Pos) + "\" Son=\"\" EndArea=\"" + to_string(p.EndArea1);
 					if (p.EndArea2)
 						xml += '|' + to_string(p.EndArea2);
-					xml += "\" MoveTime=\"3\" />\n";
 				}
 			}
+			xml += "\" MoveTime=\"3\" ";
+			//xml += "Second=\"" + to_string((p.Bar * 64 + p.Pos) / pps) + "\" ";
+			xml += "/>\n";
 		}
 		xml += "    </Normal>\n";
 		xml += "  </NoteInfo>\n";
