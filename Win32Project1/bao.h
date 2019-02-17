@@ -765,7 +765,7 @@ tuple<int, string, string> PinballBytesParser(string filename, TapLink &Taplink)
 		{
 			p = (unsigned int *)(buffer + 5 + 0x10 + i);
 			UINT son = *p;
-			if (son == 2)
+			if (son <= 2)
 				Taplink.push_back(OneTap(Type, TimePoint, 0, 2));
 			else
 				Taplink.push_back(OneTap(Type, TimePoint));
@@ -2328,22 +2328,33 @@ void AutoUpdate()
 	idol_select.close();
 	pinball_select.close();
 }
-twoNum AnalysisOne(string filename, int type, ofstream &out)
+void AnalysisOne(string filename, int type, ofstream &out)
 {
-	/*TapLink SB, newSB;
-	int showtime = XMLParse(filename, SB, type, out);
+	TapLink SB, newSB;
+	auto ret =  PinballBytesParser(filename, SB);
+	int showtime = get<0>(ret);
 	newSB = convertLong(SB);
 	sort(newSB.begin(), newSB.end(), comp);
 	correctCombo(newSB);
-	Solution &b = ShuangBao(newSB, showtime);
-	Solution &c = checkCunBao(newSB, threshold, showtime);
-	int cunFlag = 0;
-	if (b.maxscore1 + b.maxscore2 < c.maxscore1 + c.maxscore2)
-		cunFlag = 1;
-	//AutoUpdate();
-	if(cunFlag == 0)
-		return getShuang(newSB, b.mark1, b.mark2, b.mark3, b.mark4);
-	else
-		return getShuang(newSB, c.mark1, c.mark2, c.mark3, c.mark4);*/
-	return twoNum(-1, -1);
+	vector<SComboWithScore> mc1;
+	Solution a = maxBao(newSB, showtime, mc1);
+	pair<int, __int64> skill = compareSkill(newSB, a.mark1, a.mark2);
+	__int64 limit = 0, fire = 0;
+	for (int i = 0; i < newSB.size(); i++)
+	{
+		if (i >= a.mark1 && i < a.mark2)
+		{
+			//limit += int(newSB[i].score * 1.11 * 1.5);
+			fire += int(newSB[i].score * 2.7);
+			out << i << ": " << fire << endl;
+		}
+		else
+		{
+			//limit += int(newSB[i].score * 1.11);
+			fire += newSB[i].score;
+			out << i << ": " << fire << endl;
+		}
+	}
+	
+
 }

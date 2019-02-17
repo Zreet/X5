@@ -357,25 +357,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 				GetWindowText(het3, buf, 0x7FFF);
 				string bbuf = buf;
 				ofstream ftmp("tmp");
-				if (bbuf.find("idol") != string::npos)
-					tmp = AnalysisOne(buf, idol, ftmp);
-				else if (bbuf.find("pinball") != string::npos)
-					tmp = AnalysisOne(buf, pinball, ftmp);
-				else if (bbuf.find("bubble") != string::npos)
-					tmp = AnalysisOne(buf, bubble, ftmp);
-				else
-				{
-					MessageBox(NULL, "ERROR", "ERROR", MB_OK);
-					break;
-				}
-				EnterCriticalSection(&CS);
-				GetWindowText(het1, buf, 0x7FFF);
-				string len1 = to_string(tmp.limit);
-				string len2 = to_string(tmp.fire);
-				string llen = "limit " + len1 + "\t" + "fire:" + len2 + "\r\n";
-				strcat(buf, llen.c_str());
-				SetWindowText(het1, buf);
-				LeaveCriticalSection(&CS);
+				AnalysisOne(buf, pinball, ftmp);
+				ftmp.close();
 				break;
 			}
             default:
