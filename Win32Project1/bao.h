@@ -91,11 +91,11 @@ public:
 };
 bool MComboWithScoreScomp(const MComboWithScore &a, const MComboWithScore &b)
 {
-	return a.score >= b.score;
+	return a.score > b.score;
 }
 bool SComboWithScoreScomp(const SComboWithScore &a, const SComboWithScore &b)
 {
-	return a.score >= b.score;
+	return a.score > b.score;
 }
 class Solution {
 public:
@@ -324,32 +324,6 @@ bool comp(const OneTap &a, const OneTap &b)
 {
 	return a.timepoint < b.timepoint;
 }
-string UTF8_To_string(const std::string & str)
-{
-	int nwLen = MultiByteToWideChar(CP_UTF8, 0, str.c_str(), -1, NULL, 0);
-
-	wchar_t * pwBuf = new wchar_t[nwLen + 1];//一定要加1，不然会出现尾巴 
-	memset(pwBuf, 0, nwLen * 2 + 2);
-
-	MultiByteToWideChar(CP_UTF8, 0, str.c_str(), str.length(), pwBuf, nwLen);
-
-	int nLen = WideCharToMultiByte(CP_ACP, 0, pwBuf, -1, NULL, NULL, NULL, NULL);
-
-	char * pBuf = new char[nLen + 1];
-	memset(pBuf, 0, nLen + 1);
-
-	WideCharToMultiByte(CP_ACP, 0, pwBuf, nwLen, pBuf, nLen, NULL, NULL);
-
-	std::string retStr = pBuf;
-
-	delete[]pBuf;
-	delete[]pwBuf;
-
-	pBuf = NULL;
-	pwBuf = NULL;
-
-	return retStr;
-}
 int checkIncombo(int target, string buf)
 {
 	int combostart = buf.rfind("<CombineNote>", target);
@@ -365,7 +339,30 @@ int checkIncombo(int target, string buf)
 			return 0;
 	}
 }
-int XMLParse(string filename, TapLink &Taplink, int type, ofstream &out)
+string indicator1 = "<IndicatorResetPos PosNum=";
+string indicator2 = "<Pos Bar=";
+string indicator3 = "BeatPos=" ;
+int GetBarPos(string &buf, int index, int &bar, int &pos)
+{
+	int bar1 = buf.find(indicator2, index);
+	if (bar == -1)
+		return 0;
+	bar1 += indicator2.size()+1;
+	if (buf[bar1] >= '0' && buf[bar1] <= '9')
+		bar = stoi(buf.substr(bar1, 5));
+	else
+		return 0;
+	int pos1 = buf.find(indicator3, index);
+	if (pos1 == -1)
+		return 0;
+	pos1 += indicator3.size() + 1;
+	if (buf[pos1] >= '0' && buf[pos1] <= '9')
+		pos = stoi(buf.substr(pos1, 5));
+	else
+		return 0;
+	return pos1+3;
+}
+tuple<int, string, string> XMLParse(string filename, TapLink &Taplink, int type, vector<pair<int, int>> &buin)
 {
 	string title;
 	fstream xml(filename);
@@ -383,12 +380,28 @@ int XMLParse(string filename, TapLink &Taplink, int type, ofstream &out)
 		MessageBox(NULL, "无法打开文件请确认目录！", "警告", MB_OK);
 		exit(1);
 	}
-	buf  = UTF8_To_string(buf);
 	int ttitle = buf.find("<Title>");
 	int endttitle = buf.find("</Title>");
 	int aartilst = buf.find("<Artist>");
 	int endarttilst = buf.find("</Artist>");
 	string artist = buf.substr(aartilst + 8, endarttilst - aartilst - 8);
+	if (type == bubble)
+	{
+		
+		int indexpos = buf.find(indicator1);
+		indexpos += indicator1.size() + 1;
+		int len = buf.find("</IndicatorResetPos>");
+		int index = indexpos;
+		for (; index < len;)
+		{
+			int bar;
+			int pos;
+			index = GetBarPos(buf, index, bar, pos);
+			if (!index)
+				break;
+			buin.emplace_back(bar, pos);
+		}
+	}
 	int inCombine = 0;
 	if (ttitle != -1 && endttitle != -1)
 		title = buf.substr(ttitle + 7, endttitle - ttitle - 7);
@@ -403,8 +416,6 @@ int XMLParse(string filename, TapLink &Taplink, int type, ofstream &out)
 	int start = buf.find("<Normal>");
 	int end = buf.find("</Normal>");
 	buf = buf.substr(start + 9, end - start - 9);
-	if (out)
-		out << filename << ',' << title << "," << artist << ",";
 	int i = buf.find("<Note ");
 	int firstTime = 1;
 	do{
@@ -445,7 +456,7 @@ int XMLParse(string filename, TapLink &Taplink, int type, ofstream &out)
 		if (checkFirst.find("</CombineNote>") != string::npos)
 			firstTime = 1;
 	}while (i >= 0);
-	return startbb * 64;
+	return tuple<int, string, string>{startbb * 64, title, artist};
 }
 
 int FindNextPinball(char *buffer, int size)
@@ -2080,7 +2091,7 @@ int FindIIndex(vector<pair<int, int>> &buin, TapLink &SB, int bar, int pos)
 	}
 	return cnt;
 }
-void MultiThreadProcess(Context ctx)
+void MultiThreadProcess(Context ctx, int mode)
 {
 	vector<string> &filenamelist = *ctx.filenamelist;
 	int start = ctx.start;
@@ -2096,7 +2107,9 @@ void MultiThreadProcess(Context ctx)
 	vector<thread> Write;
 	for (int i = start; i < end; i++)
 	{
-		if (filenamelist[i].find(".bytes") == -1)
+		if (mode == 0 && filenamelist[i].find(".bytes") == -1)
+			continue;
+		if (mode == 1 && filenamelist[i].find(".xml") == -1)
 			continue;
 		TapLink SB, newSB;
 		vector<SComboWithScore> SingleSort;
@@ -2107,25 +2120,34 @@ void MultiThreadProcess(Context ctx)
 		int showtime;
 		tuple<int, string, string> ret;
 		vector<pair<int, int>> buin;
-		if (type == idol)
+		if(mode)
 		{
-			ret = IdolBytesParser(filenamelist[i], SB);
+			ret = XMLParse(filenamelist[i], SB, type, buin);
 			showtime = get<0>(ret);
-			Write.push_back(thread(IdolBytes2XML, filenamelist[i]));
 		}
-		else if (type == pinball)
+		else
 		{
-			ret = PinballBytesParser(filenamelist[i], SB);
-			showtime = get<0>(ret);
-			Write.push_back(thread(PinballBytes2XML, filenamelist[i]));
-		}			
-		else if (type == bubble)
-		{
-			ret = BubbleBytesParser(filenamelist[i], SB, buin);
-			showtime = get<0>(ret);
-			Write.push_back(thread(BubbleBytes2XML, filenamelist[i]));
-			//std::sort(SB.begin(), SB.end(), comp);
+			if (type == idol)
+			{
+				ret = IdolBytesParser(filenamelist[i], SB);
+				showtime = get<0>(ret);
+				Write.push_back(thread(IdolBytes2XML, filenamelist[i]));
+			}
+			else if (type == pinball)
+			{
+				ret = PinballBytesParser(filenamelist[i], SB);
+				showtime = get<0>(ret);
+				Write.push_back(thread(PinballBytes2XML, filenamelist[i]));
+			}
+			else if (type == bubble)
+			{
+				ret = BubbleBytesParser(filenamelist[i], SB, buin);
+				showtime = get<0>(ret);
+				Write.push_back(thread(BubbleBytes2XML, filenamelist[i]));
+				//std::sort(SB.begin(), SB.end(), comp);
+			}
 		}
+		
 			
 		if (showtime == -1)
 		{
@@ -2249,7 +2271,7 @@ void MultiThreadProcess(Context ctx)
 	for (auto &th : Write)
 		th.join();
 }
-void getAll(string name, ofstream &out)
+void getAll(string name, ofstream &out, int mode)
 {
 	vector<string>filenamelist;
 	getFiles(name, filenamelist);
@@ -2263,16 +2285,15 @@ void getAll(string name, ofstream &out)
 		for (int i = 0; i < 16; i++)
 		{
 			Context ctx(addressof<vector<string>>(filenamelist), i * part, (i + 1)*part, &out);
-			worker.push_back(thread(MultiThreadProcess, ctx));
+			worker.push_back(thread(MultiThreadProcess, ctx, mode));
 		}
 	if (res)
 	{
 		Context ctx(addressof<vector<string>>(filenamelist), filenamelist.size() - res, filenamelist.size(), &out);
-		MultiThreadProcess(ctx);
+		MultiThreadProcess(ctx, mode);
 	}
 	for (auto &p : worker)
 		p.join();
-	out.close();
 }
 void AutoUpdate()
 {
