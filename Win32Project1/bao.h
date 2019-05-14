@@ -82,7 +82,8 @@ public:
 	string type;
 	int fromtrack;
 	int totrack;
-	int totrack2;
+	vector<int> totracklist;
+	vector<int> lenlist;
 	int len;
 	int len2;
 	int pointer;
@@ -102,12 +103,18 @@ public:
 			int nexp = *((int *)(p + 25 + typelen));
 			if (!totrack && !len && !nexp)
 			{
-				totrack = *((int *)(p + 17 + typelen + 0x14));
-				totrack2 = *((int *)(p + 17 + typelen + 0x18));
-				len = *((int *)(p + 17 + typelen + 0x20));
-				len2 = *((int *)(p + 17 + typelen + 0x24));
+				int tonum = *((int *)(p + 17 + typelen + 0x10));
+				for (int i = 0; i < tonum; i++)
+				{
+					totracklist.push_back(*((int *)(p + 17 + typelen + 0x14 + i * 4)));
+				}
+				int lennum = *((int *)(p + 17 + typelen + 0x14 + tonum * 4));
+				for (int i = 0; i < lennum; i++)
+				{
+					lenlist.push_back(*((int *)(p + 17 + typelen + 0x18 + tonum * 4 + i * 4)));
+				}
 				normalslip = 0;
-				pointer = 17 + typelen + 0x28;
+				pointer = 17 + typelen + 0x18 + tonum * 4 + lennum * 4;
 			}
 			else
 			{
@@ -1098,7 +1105,10 @@ tuple<int, string, string> CrescentBytesParser(string filename, TapLink &Taplink
 			int pos = node.pos;
 			int bar = node.bar;
 			int TimePoint = bar * 64 + pos;
-			Taplink.emplace_back(Type, TimePoint, 0, node.len);
+			int len = node.len / 4 + 1;
+			if (node.len % 4)
+				len++;
+			Taplink.emplace_back(Type, TimePoint, 0, len);
 		}
 		else
 		{
@@ -1106,7 +1116,14 @@ tuple<int, string, string> CrescentBytesParser(string filename, TapLink &Taplink
 			int pos = node.pos;
 			int bar = node.bar;
 			int TimePoint = bar * 64 + pos;
-			Taplink.emplace_back(Type, TimePoint, 0, node.len + node.len2);
+			int len = 0;
+			for (const auto k : node.lenlist)
+			{
+				len += k / 4 + 1;
+				if (k % 4)
+					len++;
+			}
+			Taplink.emplace_back(Type, TimePoint, 0, len);
 		}
 	}
 	return tuple<int, string, string>{showtime * 64, Title, Artist};
@@ -1657,6 +1674,18 @@ TapLink convertLong(TapLink &Taplink)
 			double rest = Taplink[i].len - double(int(Taplink[i].len));
 			if (rest > 0.09)
 				newLink.push_back(OneTap(Taplink[i].type, Taplink[i].timepoint + 4 * (restLen - 1), Taplink[i].inCombine, rest));
+			break;
+		}
+		case creslip:
+		{
+			for (int j = 1; j <= int(Taplink[i].len); j++)
+				newLink.push_back(OneTap(Taplink[i].type, Taplink[i].timepoint + 4 * j, Taplink[i].inCombine));
+			break;
+		}
+		case crelong:
+		{
+			for (int j = 1; j <= int(Taplink[i].len); j++)
+				newLink.push_back(OneTap(Taplink[i].type, Taplink[i].timepoint + 4 * j, Taplink[i].inCombine));
 			break;
 		}
 		default:
