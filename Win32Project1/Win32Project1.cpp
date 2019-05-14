@@ -42,7 +42,7 @@ void ReadNote(ofstream &out, int type)
 DWORD WINAPI workerProcess(LPVOID lpParameter)
 {
 	char buf[0x7FFF] = { 0 };
-	ofstream idols, pinballs, bubbles;
+	ofstream idols, pinballs, bubbles, crescents;
 	idols.open("idol_mod.csv");
 	ReadNote(idols, 0);
 	getAll("idol", idols, 0);
@@ -58,6 +58,10 @@ DWORD WINAPI workerProcess(LPVOID lpParameter)
 	getAll("bubble", bubbles, 0);
 	getAll("old_bubble", bubbles, 1);
 	bubbles.close();
+	crescents.open("crescent_mod.csv");
+	ReadNote(crescents, 0);
+	getAll("crescent", crescents, 0);
+	crescents.close();
 	GetWindowText(het1, buf, 0x7FFF);
 	strcat(buf, "Done! \r\n");
 	SetWindowText(het1, buf);
@@ -107,6 +111,22 @@ DWORD WINAPI bubbleProcess(LPVOID lpParameter)
 	EnterCriticalSection(&CS);
 	GetWindowText(het1, buf, 0x7FFF);
 	strcat(buf, "bubble Done!\r\n");
+	SetWindowText(het1, buf);
+	LeaveCriticalSection(&CS);
+	return 0;
+}
+
+DWORD WINAPI crescentProcess(LPVOID lpParameter)
+{
+	char buf[0x7FFF] = { 0 };
+	ofstream out;
+	out.open("crescent_mod.csv");
+	ReadNote(out, 0);
+	getAll("crescent", out, 0);
+	out.close();
+	EnterCriticalSection(&CS);
+	GetWindowText(het1, buf, 0x7FFF);
+	strcat(buf, "crescent Done! \r\n");
 	SetWindowText(het1, buf);
 	LeaveCriticalSection(&CS);
 	return 0;
@@ -327,6 +347,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 				HANDLE hThread1 = CreateThread(NULL, 0, idolProcess, NULL, 0, NULL);
 				HANDLE hThread2 = CreateThread(NULL, 0, pinballProcess, NULL, 0, NULL);
 				HANDLE hThread3 = CreateThread(NULL, 0, bubbleProcess, NULL, 0, NULL);
+				HANDLE hThread4 = CreateThread(NULL, 0, crescentProcess, NULL, 0, NULL);
 				break;
 			}
 			case IDB_TWO:

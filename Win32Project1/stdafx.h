@@ -29,5 +29,10 @@
 #define idol 0
 #define pinball 1
 #define bubble 2
+#define crescent 3
+#define creshort 11
+#define crelong 12
+#define creslip 13
+#define crelight 14
 
 // TODO:  在此处引用程序需要的其他头文件

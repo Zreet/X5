@@ -64,10 +64,66 @@ public:
 			score = 780 * len;
 		else if (type == BubbleSlip)
 			score = 2600 * len;
+		else if (type == crelong || type == creslip)
+			score = 780 * len;
+		else if (type == crelight)
+			score = 1040;
 		else
 			score = 2600;
 	};
 };
+
+class BinaryCrescentNode
+{
+public:
+	int bar;
+	int pos;
+	int typelen;
+	string type;
+	int fromtrack;
+	int totrack;
+	int totrack2;
+	int len;
+	int len2;
+	int pointer;
+	bool normalslip;
+	BinaryCrescentNode(char *p, string file)
+	{
+		normalslip = 1;
+		bar = *((int *)p);
+		pos = *((int *)(p + 4));
+		typelen = *((int *)(p + 8));
+		type = string(p + 12);
+		fromtrack = *((int *)(p + 13 + typelen));
+		if (type == "slip")
+		{
+			totrack = *((int *)(p + 17 + typelen));
+			len = *((int *)(p + 21 + typelen));
+			int nexp = *((int *)(p + 25 + typelen));
+			if (!totrack && !len && !nexp)
+			{
+				totrack = *((int *)(p + 17 + typelen + 0x14));
+				totrack2 = *((int *)(p + 17 + typelen + 0x18));
+				len = *((int *)(p + 17 + typelen + 0x20));
+				len2 = *((int *)(p + 17 + typelen + 0x24));
+				normalslip = 0;
+				pointer = 17 + typelen + 0x28;
+			}
+			else
+			{
+				pointer = 21 + typelen + 0x10;
+			}
+		}
+		else
+		{			
+			totrack = *((int *)(p + 17 + typelen));
+			len = *((int *)(p + 21 + typelen));
+			pointer = 21 + typelen + 0x10;
+		}
+		
+	}
+};
+
 class ComboWithScore {
 public:
 	double score;
@@ -946,6 +1002,115 @@ unsigned int Char2Uint(char *buffer)
 {
 	return *(unsigned int *)buffer;
 }
+int FindCreBegin(char *buffer, int size)
+{
+	for (int i = 0; i < size + 5; i++)
+	{
+		if (buffer[i] == 'l'
+			&& buffer[i + 1] == 'o'
+			&& buffer[i + 2] == 'n'
+			&& buffer[i + 3] == 'g'
+			&& buffer[i + 4] == 0
+			)
+			return i;
+		if (buffer[i] == 'l'
+			&& buffer[i + 1] == 'i'
+			&& buffer[i + 2] == 'g'
+			&& buffer[i + 3] == 'h'
+			&& buffer[i + 4] == 't'
+			&& buffer[i + 5] == 0
+			)
+			return i;
+		if (buffer[i] == 's'
+			&& buffer[i + 1] == 'h'
+			&& buffer[i + 2] == 'o'
+			&& buffer[i + 3] == 'r'
+			&& buffer[i + 4] == 't'
+			&& buffer[i + 5] == 0
+			)
+			return i;
+		if (buffer[i] == 's'
+			&& buffer[i + 1] == 'l'
+			&& buffer[i + 2] == 'i'
+			&& buffer[i + 3] == 'p'
+			&& buffer[i + 4] == 0
+			)
+			return i;
+	}
+	return -1;
+}
+tuple<int, string, string> CrescentBytesParser(string filename, TapLink &Taplink)
+{
+	string title;
+	//MessageBox(0, filename.c_str(), "debug", MB_OK);
+	ifstream Bytesfile(filename, ios::in | ios::binary | ios::ate);
+	char *buffer;
+	int i = 0;
+	streampos fsize;
+	UINT size;
+	if (Bytesfile)
+	{
+		fsize = Bytesfile.tellg();
+		size = (UINT)fsize;
+		buffer = new char[size];
+		Bytesfile.seekg(0, ios::beg);
+		Bytesfile.read(buffer, size);
+		Bytesfile.close();
+	}
+	else
+	{
+		MessageBox(NULL, "CANNOT READ FILE!", "ERROR", MB_OK);
+		exit(1);
+	}
+	unsigned int showtime = *(unsigned int *)(buffer + getShowTime(buffer, size));
+	string Title = GetNextStr(buffer + 0x47, size - 0x47);
+	i = 0x47 + Title.size() + 5;
+	string Artist = GetNextStr(buffer + i, size - i);
+	i += Artist.size();
+
+	char *pointer = buffer + i;
+	int index = -1;
+	while((index = FindCreBegin(buffer + i, size - i)) != -1)
+	{
+		i += index - 12;
+		BinaryCrescentNode node(buffer + i, filename);
+		i += node.pointer;
+		int Type;
+		if (node.type == "short")
+		{
+			Type = creshort;
+			int pos = node.pos;
+			int bar = node.bar;
+			int TimePoint = bar * 64 + pos;
+			Taplink.emplace_back(Type, TimePoint);
+		}
+		else if (node.type == "light")
+		{
+			Type = crelight;
+			int pos = node.pos;
+			int bar = node.bar;
+			int TimePoint = bar * 64 + pos;
+			Taplink.emplace_back(Type, TimePoint);
+		}
+		else if (node.type == "long" || (node.type == "slip" && node.normalslip))
+		{
+			Type = creslip;
+			int pos = node.pos;
+			int bar = node.bar;
+			int TimePoint = bar * 64 + pos;
+			Taplink.emplace_back(Type, TimePoint, 0, node.len);
+		}
+		else
+		{
+			Type = creslip;
+			int pos = node.pos;
+			int bar = node.bar;
+			int TimePoint = bar * 64 + pos;
+			Taplink.emplace_back(Type, TimePoint, 0, node.len + node.len2);
+		}
+	}
+	return tuple<int, string, string>{showtime * 64, Title, Artist};
+}
 
 tuple<int, string, string> IdolBytesParser(string filename, TapLink &Taplink)
 {
@@ -1406,6 +1571,14 @@ string PrintType(OneTap *p)
 	if (p->type == BubbleSingle)
 		rst = "SINGLE";
 	if (p->type == BubbleSlip)
+		rst = "SLIP";
+	if (p->type == creshort)
+		rst = "SHORT";
+	if (p->type == crelight)
+		rst = "LIGHT";
+	if (p->type == crelong)
+		rst = "LONG";
+	if (p->type == creslip)
 		rst = "SLIP";
 	return rst;
 }
@@ -1896,6 +2069,7 @@ void PinballBytes2XML(string filename)
 	delete[]buffer;
 
 }
+
 void BubbleBytes2XML(string filename)
 {
 	XML xml;
@@ -2104,6 +2278,8 @@ void MultiThreadProcess(Context ctx, int mode)
 		type = pinball;
 	if (filenamelist[0].find("bubble") != -1)
 		type = bubble;
+	if (filenamelist[0].find("crescent") != -1)
+		type = crescent;
 	vector<thread> Write;
 	for (int i = start; i < end; i++)
 	{
@@ -2145,6 +2321,11 @@ void MultiThreadProcess(Context ctx, int mode)
 				showtime = get<0>(ret);
 				Write.push_back(thread(BubbleBytes2XML, filenamelist[i]));
 				//std::sort(SB.begin(), SB.end(), comp);
+			}
+			else if (type == crescent)
+			{
+				ret = CrescentBytesParser(filenamelist[i], SB);
+				showtime = get<0>(ret);
 			}
 		}
 		
