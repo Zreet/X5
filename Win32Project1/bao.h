@@ -1043,6 +1043,13 @@ int FindCreBegin(char *buffer, int size)
 			&& buffer[i + 4] == 0
 			)
 			return i;
+		if (buffer[i] == 'p'
+			&& buffer[i + 1] == 'a'
+			&& buffer[i + 2] == 'i'
+			&& buffer[i + 3] == 'r'
+			&& buffer[i + 4] == 0
+			)
+			return i;
 	}
 	return -1;
 }
@@ -1110,6 +1117,15 @@ tuple<int, string, string> CrescentBytesParser(string filename, TapLink &Taplink
 				len++;
 			Taplink.emplace_back(Type, TimePoint, 0, len);
 		}
+		else if (node.type == "pair")
+		{
+			Type = crepair;
+			int pos = node.pos;
+			int bar = node.bar;
+			int TimePoint = bar * 64 + pos;
+			int len = 2;
+			Taplink.emplace_back(Type, TimePoint, 0, len);
+		}
 		else
 		{
 			Type = creslip;
@@ -1119,10 +1135,11 @@ tuple<int, string, string> CrescentBytesParser(string filename, TapLink &Taplink
 			int len = 0;
 			for (const auto k : node.lenlist)
 			{
-				len += k / 4 + 1;
+				len += k / 4;
 				if (k % 4)
 					len++;
 			}
+			len++;
 			Taplink.emplace_back(Type, TimePoint, 0, len);
 		}
 	}
@@ -1597,6 +1614,8 @@ string PrintType(OneTap *p)
 		rst = "LONG";
 	if (p->type == creslip)
 		rst = "SLIP";
+	if (p->type == crepair)
+		rst = "PAIR";
 	return rst;
 }
 void outPutTap(OneTap *p, ofstream &out)
@@ -1686,6 +1705,12 @@ TapLink convertLong(TapLink &Taplink)
 		{
 			for (int j = 1; j <= int(Taplink[i].len); j++)
 				newLink.push_back(OneTap(Taplink[i].type, Taplink[i].timepoint + 4 * j, Taplink[i].inCombine));
+			break;
+		}
+		case crepair:
+		{
+			newLink.push_back(OneTap(Taplink[i].type, Taplink[i].timepoint));
+			newLink.push_back(OneTap(Taplink[i].type, Taplink[i].timepoint));
 			break;
 		}
 		default:
